@@ -287,11 +287,7 @@ public class RoadTrip {
 //List<String> attractions)
 //Run through direct paths given on roads.csv, fill in those direct paths in a 2 dimensional array used as a graph.
 
-//Floyd's algorithm
-// for k = 0 - n-1
-//       for i = 0 - n-1
-//              for j = 0 - n-1
-//                      D[i][j] = min(D[i][j], D[i][k] + D[k][j])
+
 
 //2 dimensional array - apply floyd’s algorithm to determine the distance between i and j
 
