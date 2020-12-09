@@ -41,6 +41,7 @@ public class RoadTrip {
     public HashMap<String, ArrayList<String[]>> graph = new HashMap<>();
     public HashMap<String, String> attractionsMap = new HashMap<>();
     HashMap<String, Integer> dist = new HashMap<>();
+    HashMap<String, Integer> destdist = new HashMap<>();
     HashSet<String> cities = new HashSet<>();
     HashSet<String> visited = new HashSet<>();
     Set<City> pathTrackers = new HashSet<>();
@@ -52,6 +53,7 @@ public class RoadTrip {
         // start with all distances as infinite
         for (String c : cities) {
             dist.put(c, Integer.MAX_VALUE);
+            destdist.put(c, Integer.MAX_VALUE);
         }
     }
 
@@ -121,6 +123,24 @@ public class RoadTrip {
         return closestNeighbor;
     }
 
+    // helper function to find the city with the lowest distance from the source
+    public String getClosestUnvisitedNeighborD() {
+
+        int minDistance = Integer.MAX_VALUE;
+        String closestNeighbor = "";
+
+        for (String n: cities) {
+            if (!visited.contains(n) && destdist.get(n) <= minDistance) {
+                minDistance = destdist.get(n);
+                closestNeighbor = n;
+            }
+        }
+        //mark it as visited so we don't ever return the same city twice
+        visited.add(closestNeighbor);
+        return closestNeighbor;
+    }
+
+
     public List<String> route(String starting_city, String ending_city, List<String> attractions) {
         HashMap<String, String> paths = new HashMap<>();
         List<String> attractionLocations = new LinkedList<>();
@@ -132,7 +152,8 @@ public class RoadTrip {
         // we want to calculate every single objects distance from the destination
         // we'll use these distances to prioritize which landmarks to visit first
         // we should visit the landmarks fathest away from our dest first (not closest)
-        dist.put(ending_city, 0);
+        destdist.put(ending_city, 0);
+        dist.put(starting_city, 0);
         City start = new City(starting_city, null);
         pathTrackers.add(start);
 
@@ -140,6 +161,30 @@ public class RoadTrip {
         // MAX VALU, abelline = 0, austin 217, dalls = 183, lubbok = 183, fresno = 10340183918324980123409182
         // visited = []
         //visit every single city, calcluate the shortest path from source to every single city in the graph
+        for (String c : cities) {
+            while (!visited.contains(c)) {
+                //mark it as visited
+                //repeat for dest
+                String closestUnvisitedNeighbor = getClosestUnvisitedNeighborD(); // fresno
+                for (String[] neighbor : graph.get(closestUnvisitedNeighbor)) {
+                    //123 + 183
+                    //neighbor = dallas
+                    // neighbor = ['lubbock', 'fresno, '123', 120]
+                    // 123 + 183 = 206
+                    // calculate distance from starting city
+                    int distanceFromStart = Integer.parseInt(neighbor[1]) + destdist.get(closestUnvisitedNeighbor);
+                    if ( !closestUnvisitedNeighbor.equals(neighbor) && distanceFromStart < destdist.get(neighbor[0])) {
+
+                        dist.put(neighbor[0], distanceFromStart);
+                        //need to keep track of path
+                        City city = new City(neighbor[0], getPreviousCity(closestUnvisitedNeighbor));
+                        pathTrackers.add(city);
+
+                    }
+                }
+
+            }
+        }
         for (String c : cities) {
             while (!visited.contains(c)) {
                 //mark it as visited
@@ -160,6 +205,7 @@ public class RoadTrip {
 
                     }
                 }
+
             }
         }
 
@@ -167,26 +213,18 @@ public class RoadTrip {
         PriorityQueue<Attraction> pq = orderLandmarks(attractions);
 
 
-//        City node = null;
-//        for (City c: pathTrackers) {
-//            if (c.currentName.equals(city)) {
-//                node = c;
-//            }
-//        }
-//
-//        while(node.previous != null) {
-//            finalRoute.addFirst(node.previous.currentName);
-//            node = node.previous;
-//        }
+
         // get path from each landmark to next landmark in order or priority
         String city = starting_city;
         boolean first = true;
 
         while (pq.peek() != null) {
             String city1 = pq.poll().name;
-            getShortestPath(city, city1, first);
-            first = false;
-            city = city1;
+            if(!finalRoute.contains(city1)) {
+                getShortestPath(city, city1, first);
+                first = false;
+                city = city1;
+            }
 
         }
         getShortestPath(city, ending_city, first);
@@ -287,10 +325,13 @@ public class RoadTrip {
 //List<String> attractions)
 //Run through direct paths given on roads.csv, fill in those direct paths in a 2 dimensional array used as a graph.
 
-
+//Floyd's algorithm
+// for k = 0 - n-1
+//       for i = 0 - n-1
+//              for j = 0 - n-1
+//                      D[i][j] = min(D[i][j], D[i][k] + D[k][j])
 
 //2 dimensional array - apply floyd’s algorithm to determine the distance between i and j
-
 
 
 
